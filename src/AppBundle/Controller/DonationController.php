@@ -3,8 +3,9 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Donation;
+use AppBundle\Exception\BadUuidRequestException;
+use AppBundle\Exception\InvalidUuidException;
 use AppBundle\Form\DonationRequestType;
-use Ramsey\Uuid\Uuid;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -91,11 +92,15 @@ class DonationController extends Controller
     {
         $id = explode('_', $request->query->get('id'))[0];
 
-        if (!$id || !Uuid::isValid($id)) {
+        if (!$id) {
             return $this->redirectToRoute('donation_index');
         }
 
-        return $this->get('app.donation.transaction_callback_handler')->handle($id, $request);
+        try {
+            return $this->get('app.donation.transaction_callback_handler')->handle($id, $request);
+        } catch (InvalidUuidException $e) {
+            throw new BadUuidRequestException($e);
+        }
     }
 
     /**

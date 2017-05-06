@@ -12,6 +12,9 @@ use Doctrine\ORM\QueryBuilder;
 class EventRepository extends EntityRepository
 {
     use NearbyTrait;
+    use UuidEntityRepositoryTrait {
+        findOneByUuid as findOneByValidUuid;
+    }
 
     public function count(): int
     {
@@ -50,13 +53,21 @@ class EventRepository extends EntityRepository
         return $query->getOneOrNullResult();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function findOneByUuid(string $uuid): ?Event
     {
-        return $this->findOneBy(['uuid' => $uuid]);
+        return $this->findOneByValidUuid($uuid);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function findOneActiveByUuid(string $uuid): ?Event
     {
+        self::validUuid($uuid);
+
         $query = $this->createQueryBuilder('e')
             ->where('e.uuid = :uuid')
             ->andWhere('e.status IN (:statuses)')
