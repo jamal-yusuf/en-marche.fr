@@ -60,7 +60,7 @@ class Donation implements GeoPointInterface
     /**
      * @ORM\Column(type="boolean")
      */
-    private $finished;
+    private $finished = false;
 
     /**
      * @ORM\Column(length=50, nullable=true)
@@ -93,16 +93,15 @@ class Donation implements GeoPointInterface
         $this->emailAddress = $emailAddress;
         $this->postAddress = $postAddress;
         $this->phone = $phone;
-        $this->finished = false;
-        $this->createdAt = new \DateTime();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->lastName.' '.$this->firstName.' ('.($this->amount / 100).' €)';
+        return trim($this->lastName.' '.$this->firstName.' ('.($this->amount / 100).' €)');
     }
 
-    public function init(string $clientIp)
+    public function init(string $clientIp): void
     {
         if (null !== $this->uuid) {
             throw new InitializedEntityException($this);
@@ -112,7 +111,7 @@ class Donation implements GeoPointInterface
         $this->clientIp = $clientIp;
     }
 
-    public function finish(array $payboxPayload)
+    public function finish(array $payboxPayload): void
     {
         $this->finished = true;
         $this->payboxPayload = $payboxPayload;
@@ -137,57 +136,57 @@ class Donation implements GeoPointInterface
         return $this->finished && $this->donatedAt;
     }
 
-    public function getAmount()
+    public function getAmount(): int
     {
         return $this->amount;
     }
 
-    public function getAmountInEuros()
+    public function getAmountInEuros(): float
     {
-        return $this->amount / 100;
+        return (float) $this->amount / 100;
     }
 
-    public function getGender()
+    public function getGender(): string
     {
         return $this->gender;
     }
 
-    public function getEmailAddress()
+    public function getEmailAddress(): string
     {
         return $this->emailAddress;
     }
 
-    public function getPhone()
+    public function getPhone(): PhoneNumber
     {
         return $this->phone;
     }
 
-    public function getPayboxResultCode()
+    public function getPayboxResultCode(): ?string
     {
         return $this->payboxResultCode;
     }
 
-    public function getPayboxAuthorizationCode()
+    public function getPayboxAuthorizationCode(): ?string
     {
         return $this->payboxAuthorizationCode;
     }
 
-    public function getPayboxPayload()
+    public function getPayboxPayload(): ?array
     {
         return $this->payboxPayload;
     }
 
-    public function getPayboxPayloadAsJson()
+    public function getPayboxPayloadAsJson(): string
     {
         return json_encode($this->payboxPayload, JSON_PRETTY_PRINT);
     }
 
-    public function getFinished()
+    public function getFinished(): bool
     {
         return $this->finished;
     }
 
-    public function getClientIp()
+    public function getClientIp(): ?string
     {
         return $this->clientIp;
     }
@@ -197,8 +196,29 @@ class Donation implements GeoPointInterface
         return $this->donatedAt;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
+    }
+
+    public function getRetryPayload(): array
+    {
+        $payload = [
+            'ge' => $this->gender,
+            'ln' => $this->lastName,
+            'fn' => $this->firstName,
+            'em' => urlencode($this->emailAddress),
+            'co' => $this->getCountry(),
+            'pc' => $this->getPostalCode(),
+            'ci' => $this->getCityName(),
+            'ad' => urlencode($this->getAddress()),
+        ];
+
+        if ($this->phone) {
+            $payload['phc'] = $this->phone->getCountryCode();
+            $payload['phn'] = $this->phone->getNationalNumber();
+        }
+
+        return $payload;
     }
 }

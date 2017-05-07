@@ -2,7 +2,7 @@
 
 namespace AppBundle\Membership;
 
-use AppBundle\Donation\DonationRequestFactory;
+use AppBundle\Donation\DonationRequestHelper;
 use AppBundle\Entity\Adherent;
 use AppBundle\Entity\Donation;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -12,18 +12,18 @@ final class MembershipUtils
     const REGISTERING_DONATION = 'membership.registering_donation';
     const NEW_ADHERENT_ID = 'membership.new_adherent_id';
 
-    private $factory;
+    private $donationRequestHelper;
     private $session;
 
-    public function __construct(DonationRequestFactory $factory, SessionInterface $session)
+    public function __construct(DonationRequestHelper $donationRequestHelper, SessionInterface $session)
     {
-        $this->factory = $factory;
+        $this->donationRequestHelper = $donationRequestHelper;
         $this->session = $session;
     }
 
     public function createRegisteringDonation(Adherent $adherent)
     {
-        $donationRequest = $this->factory->createFromAdherent($adherent);
+        $donationRequest = $this->donationRequestHelper->createFromAdherent($adherent);
 
         $this->session->set(self::REGISTERING_DONATION, $donationRequest);
         $this->session->set(self::NEW_ADHERENT_ID, $adherent->getId());

@@ -7,7 +7,11 @@
         <!-- Donation -->
         <service id="app.donation.factory" class="AppBundle\Donation\DonationFactory" />
 
-        <service id="app.donation_request.factory" class="AppBundle\Donation\DonationRequestFactory" />
+        <service id="app.donation_request_helper" class="AppBundle\Donation\DonationRequestHelper">
+            <argument type="service" id="validator" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+        </service>
 
         <service id="app.donation_request.handler" class="AppBundle\Donation\DonationRequestHandler">
             <argument type="service" id="event_dispatcher" />

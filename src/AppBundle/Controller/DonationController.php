@@ -3,12 +3,14 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Donation;
+use AppBundle\Exception\InvalidDonationTokenException;
 use AppBundle\Form\DonationRequestType;
 use Ramsey\Uuid\Uuid;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * @Route("/don")
@@ -38,8 +40,12 @@ class DonationController extends Controller
             return $this->redirectToRoute('donation_index');
         }
 
-        $factory = $this->get('app.donation_request.factory');
-        $donationRequest = $factory->createFromRequest($request, $amount, $this->getUser());
+        try {
+            $donationRequest = $this->get('app.donation_request_helper')->createFromRequest($request, $amount, $this->getUser());
+        } catch (InvalidDonationTokenException $e) {
+            throw new BadRequestHttpException('Invalid token.', $e);
+        }
+
         $form = $this->createForm(DonationRequestType::class, $donationRequest, ['locale' => $request->getLocale()]);
 
         if ($form->handleRequest($request)->isSubmitted() && $form->isValid()) {
@@ -107,24 +113,14 @@ class DonationController extends Controller
      */
     public function resultAction(Request $request, Donation $donation)
     {
-        $parameters = [
-            'montant' => $donation->getAmount() / 100,
-            'ge' => $donation->getGender(),
-            'ln' => $donation->getLastName(),
-            'fn' => $donation->getFirstName(),
-            'em' => urlencode($donation->getEmailAddress()),
-            'co' => $donation->getCountry(),
-            'pc' => $donation->getPostalCode(),
-            'ci' => $donation->getCityName(),
-            'ad' => urlencode($donation->getAddress()),
-        ];
-
-        if ($donation->getPhone()) {
-            $parameters['phc'] = $donation->getPhone()->getCountryCode();
-            $parameters['phn'] = $donation->getPhone()->getNationalNumber();
+        try {
+            $retryUrl = $this->generateUrl(
+                'donation_informations',
+                $this->get('app.donation_request_helper')->createPayload($donation, $request)
+            );
+        } catch (InvalidDonationTokenException $e) {
+            throw new BadRequestHttpException('Invalid callback status.', $e);
         }
-
-        $retryUrl = $this->generateUrl('donation_informations', $parameters);
 
         return $this->render('donation/result.html.twig', [
             'successful' => $donation->isSuccessful(),
