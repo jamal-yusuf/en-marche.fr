@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use Algolia\AlgoliaSearchBundle\Mapping\Annotation as Algolia;
+use AppBundle\Donation\DonationType\UniqDonationTypeImpl;
 use AppBundle\Exception\InitializedEntityException;
 use AppBundle\Geocoder\GeoPointInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -77,6 +78,11 @@ class Donation implements GeoPointInterface
      */
     private $createdAt;
 
+    /**
+     * @ORM\Column(type="string")
+     */
+    private $frequency;
+
     public function __construct(
         int $amount,
         string $gender,
@@ -84,7 +90,8 @@ class Donation implements GeoPointInterface
         string $lastName,
         string $emailAddress,
         PostAddress $postAddress,
-        ?PhoneNumber $phone
+        ?PhoneNumber $phone,
+        string $frequency
     ) {
         $this->amount = $amount;
         $this->gender = $gender;
@@ -95,6 +102,7 @@ class Donation implements GeoPointInterface
         $this->phone = $phone;
         $this->finished = false;
         $this->createdAt = new \DateTime();
+        $this->frequency = $frequency;
     }
 
     public function __toString()
@@ -200,5 +208,15 @@ class Donation implements GeoPointInterface
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
+    }
+
+    public function getFrequency(): string
+    {
+        return $this->frequency;
+    }
+
+    public function setFrequency(string $frequency)
+    {
+        $this->frequency = $frequency;
     }
 }

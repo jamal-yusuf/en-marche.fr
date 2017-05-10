@@ -28,7 +28,8 @@ class DonationFactory
                 $request->getCityName(),
                 $request->getAddress()
             ),
-            $request->getPhone()
+            $request->getPhone(),
+            $request->getFrequency()
         );
     }
 }

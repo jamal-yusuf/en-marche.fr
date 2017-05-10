@@ -88,6 +88,11 @@ class DonationRequest
      */
     private $phone;
 
+    /**
+     * @Assert\NotBlank()
+     */
+    private $frequency;
+
     public function __construct(float $amount = 50.0)
     {
         $this->emailAddress = '';
@@ -234,5 +239,15 @@ class DonationRequest
     public function getPhone(): ?PhoneNumber
     {
         return $this->phone;
+    }
+
+    public function getFrequency(): string
+    {
+        return $this->frequency;
+    }
+
+    public function setFrequency(string $frequency)
+    {
+        $this->frequency = $frequency;
     }
 }

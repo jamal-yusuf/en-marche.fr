@@ -26,7 +26,7 @@ class PayboxFormFactory
     public function createPayboxFormForDonation(Donation $donation)
     {
         $parameters = [
-            'PBX_CMD' => $donation->getUuid()->toString().'_'.$this->slugify->slugify($donation->getFullName()),
+            'PBX_CMD' => $donation->getUuid()->toString().'_'.$this->slugify->slugify($donation->getFullName()).$this->getPayboxSuffixCommand($donation),
             'PBX_PORTEUR' => $donation->getEmailAddress(),
             'PBX_TOTAL' => $donation->getAmount(),
             'PBX_DEVISE' => '978',
@@ -52,5 +52,14 @@ class PayboxFormFactory
         $this->requestHandler->setParameters($parameters);
 
         return $this->requestHandler;
+    }
+
+    private function getPayboxSuffixCommand(Donation $donation): string
+    {
+        if ('1' === $donation->getFrequency()) {
+            return '';
+        }
+
+        return sprintf("PBX_2MONT%sPBX_NBPAIE%sPBX_FREQ01PBX_QUAND00", str_pad($donation->getAmount(), 10, '0', STR_PAD_LEFT), str_pad(intval($donation->getFrequency()) - 1, 2, '0', STR_PAD_LEFT));
     }
 }
