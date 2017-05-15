@@ -2,7 +2,6 @@
 
 namespace AppBundle\Donation;
 
-use AppBundle\Donation\DonationType\UniqDonationTypeImpl;
 use AppBundle\Entity\Adherent;
 use libphonenumber\PhoneNumber;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +15,9 @@ class DonationRequestFactory
         } else {
             $donation = new DonationRequest($amount);
         }
+
+        $frequency = $request->query->get('frequence', PayboxPaymentFrequency::DEFAULT_FREQUENCY);
+        $donation->setFrequency(PayboxPaymentFrequency::fromString($frequency)->getFrequency());
 
         if (($gender = $request->query->get('ge')) && in_array($gender, ['male', 'female'], true)) {
             $donation->setGender($gender);

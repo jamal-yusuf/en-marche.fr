@@ -54,12 +54,11 @@ class PayboxFormFactory
         return $this->requestHandler;
     }
 
+    /**
+     * Get suffix to PBX_CMD for monthly donations.
+     */
     private function getPayboxSuffixCommand(Donation $donation): string
     {
-        if ('1' === $donation->getFrequency()) {
-            return '';
-        }
-
-        return sprintf("PBX_2MONT%sPBX_NBPAIE%sPBX_FREQ01PBX_QUAND00", str_pad($donation->getAmount(), 10, '0', STR_PAD_LEFT), str_pad(intval($donation->getFrequency()) - 1, 2, '0', STR_PAD_LEFT));
+        return PayboxPaymentFrequency::fromInteger($donation->getFrequency())->getPayboxSuffixCmd($donation->getAmount());
     }
 }

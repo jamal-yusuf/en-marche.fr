@@ -3,6 +3,8 @@
 namespace AppBundle\Donation;
 
 use AppBundle\Entity\Adherent;
+use AppBundle\Entity\Donation;
+use AppBundle\Validator\DonationFrequency;
 use libphonenumber\PhoneNumber;
 use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber as AssertPhoneNumber;
 use AppBundle\Validator\UnitedNationsCountry as AssertUnitedNationsCountry;
@@ -10,6 +12,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class DonationRequest
 {
+    const DEFAULT_AMOUNT = 50.0;
+
     /**
      * @Assert\NotBlank(message="donation.amount.not_blank")
      * @Assert\GreaterThan(value=0, message="donation.amount.greater_than_0")
@@ -89,20 +93,19 @@ class DonationRequest
     private $phone;
 
     /**
-     * @Assert\NotBlank()
+     * @DonationFrequency()
      */
     private $frequency;
 
-    public function __construct(float $amount = 50.0)
+    public function __construct(float $amount = self::DEFAULT_AMOUNT)
     {
         $this->emailAddress = '';
         $this->country = 'FR';
         $this->phone = static::createPhoneNumber();
-
         $this->setAmount($amount);
     }
 
-    public static function createFromAdherent(Adherent $adherent, float $amount = 50.0): self
+    public static function createFromAdherent(Adherent $adherent, float $amount = self::DEFAULT_AMOUNT): self
     {
         $dto = new self($amount);
         $dto->gender = $adherent->getGender();
@@ -241,12 +244,12 @@ class DonationRequest
         return $this->phone;
     }
 
-    public function getFrequency(): string
+    public function getFrequency(): ?int
     {
         return $this->frequency;
     }
 
-    public function setFrequency(string $frequency)
+    public function setFrequency(int $frequency): void
     {
         $this->frequency = $frequency;
     }
